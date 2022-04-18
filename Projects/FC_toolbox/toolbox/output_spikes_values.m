@@ -1,6 +1,6 @@
 % want to create a script that pulls epochs of eeg data from  patient
 % around the seq times that are specified. 
-
+addpath '/gdrive/public/USERS/aguilac/Projects/FC_toolbox/tools/'
 locations = fc_toolbox_locs_agui;
 results_folder = [locations.main_folder,'results/'];
 allout_file = [results_folder, 'all_out/']; %add location to access the PC files generated from long_run
@@ -46,8 +46,8 @@ fname = pt(p).ieeg.file(f).name;
 
 %% get a sample dataset. lets go for 10 run_times
 
-run_times_slice = run_times(6:11);
-gdf_slice = gdf(6:11);
+run_times_slice = run_times;
+gdf_slice = gdf;
 
 %%
 values_all = {};
@@ -86,17 +86,18 @@ end
 
 %%
 seqs_all = {};
+rl = {};
 for k = 1:length(gdf_slice)
-    [~,~,~,~,~,seqs_all{k}] = build_sequences(gdf_slice{k},length(ch_labels_all{k}),fs_all{k}); %generates a sequence file for a given gdf
+    [~,rl{k},~,~,~,seqs_all{k}] = build_sequences(gdf_slice{k},length(ch_labels_all{k}),fs_all{k}); %generates a sequence file for a given gdf
 end
 
 %% create large MAT file for python import
 split_1.sequences = seqs_all;
 split_1.values = values_all;
 split_1.chLabels = ch_labels_all;
-save('/Users/carlosaguila/PycharmProjects/CNT_Interictal_Spikes/matlab_import/split_1.mat')
+save('/gdrive/public/USERS/aguilac/Projects/FC_toolbox/results/mat_output/split_1.mat','split_1', '-v7.3');
 %% plot sequence
-figure(1)
-show_eeg_and_spikes(values_all{1},ch_labels_all{1}, seqs_all{1}{1}, fs_all{1}) %this plots 1st sequence in our first gdf
+%figure(1)
+%show_eeg_and_spikes(values_all{1},ch_labels_all{1}, seqs_all{1}{1}, fs_all{1}) %this plots 1st sequence in our first gdf
 
 %this is to show that gdf lines up with values
