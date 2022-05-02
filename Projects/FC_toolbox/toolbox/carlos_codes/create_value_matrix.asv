@@ -18,7 +18,6 @@ pt = load([data_folder,'pt.mat']);
 pt = pt.pt;
 
 % getting spike information from patient
-whichPts = 1;
 for p = whichPts
        pt_name = pt(p).name;
 end
@@ -42,22 +41,42 @@ for im = 2 %only want the CAR montage
     end
 end
 
-%
+%TEST a slice
+gdf_slice2 = {};
+gdf_slice2{1} = gdf_slice{1}(1,249:253);
+gdf_slice = gdf_slice2;
+run_times_slice2 = {};
+run_times_slice2{1} = run_times_slice{1}(1,249:253);
+run_times_slice= run_times_slice2;
+
 values_all = {};
 ch_labels_all = {};
 fs_all = {};
-run_times_slice2 = {};
-gdf_slice2 = {};
-gdf_slice2{1} = gdf_slice{1}(1:10);
-gdf_slice2{2} = gdf_slice{2}(1:10);
-gdf_slice = gdf_slice2;
-run_times_slice2{1} = run_times_slice{1}(1:10);
-run_times_slice2{2} = run_times_slice{2}(1:10);
-run_times_slice = run_times_slice2;
-
 
 for f = 1:length(out.file)
+pathway1 = '/gdrive/public/USERS/aguilac/Projects/FC_toolbox/results/mat_output/values/values_%s.mat'; %too large
+filename1 = sprintf(pathway1,fname{f});
+pathway2 = '/gdrive/public/USERS/aguilac/Projects/FC_toolbox/results/mat_output/chlabels/chLabels_%s.mat'; %saved
+filename2 = sprintf(pathway2,fname{f});
+
+if exist(filename1) ~= 0
+values_all = load(filename1,'-mat');
+values_all = values_all.values_all;
+values_all = values_all.values_all;
+
+ch_labels_all = load(filename2,'-mat');
+ch_labels_all = ch_labels_all.ch_labels_all;
+ch_labels_all = ch_labels_all.ch_labels_all;
+
+data = download_ieeg_data(fname{f},login_name,pwfile,run_times_slice{f}{1},1);
+disp(fname{f});
+disp('file exists... we load it in');
+fs = data.fs;
+
+else
+    
 for d = 1:length(gdf_slice{f})
+    
 data = download_ieeg_data(fname{f},login_name,pwfile,run_times_slice{f}{d},1); % 1 means get lots of data
 disp(fname{f});
 disp(d);
@@ -91,6 +110,8 @@ ch_labels_all{d} = curr_labels;
 values_all{d} = run_values;
 end
 
+
+
 sprintf('finished %s',fname{f})
 pathway1 = '/gdrive/public/USERS/aguilac/Projects/FC_toolbox/results/mat_output/values/values_%s.mat'; %too large
 pathway2 = '/gdrive/public/USERS/aguilac/Projects/FC_toolbox/results/mat_output/chlabels/chLabels_%s.mat'; %saved
@@ -100,6 +121,7 @@ filename2 = sprintf(pathway2,fname{f});
 %save(filename2, 'ch_labels_all');
 disp('-----')
 disp('saved values and chlabels for pt');
+end
 
 seqs_all = {};
 rl = {};
@@ -107,7 +129,7 @@ global_coi ={};
 leaders = {};
 
 for k = 1:length(gdf_slice{f})
-    [~,rl{k},global_coi{k},~,leaders{k},seqs_all{k}] = build_sequences(gdf_slice{f}{k},length(ch_labels_all{k}),512);%fs_all{k}); %generates a sequence file for a given gdf
+    [~,rl{k},global_coi{k},~,leaders{k},seqs_all{k}] = build_sequences(gdf_slice{f}{k},length(ch_labels_all{k}),fs); %generates a sequence file for a given gdf
 end
 
 % split the values into index ranges, cutting down on the amount of stored
@@ -134,19 +156,21 @@ end
 value_per_spikeinseq={};
 
 for k = 1:length(seqs_concat)
+    disp(k)
     for i = 1:length(seqs_concat{k})
+        disp(i)
         if seqs_concat{k}(i,2)-256 <= 0 %edge condition for the beginning of the values
-            ini = values_all{f}{k}(1:seqs_concat{k}(i,2)+256, seqs_concat{k}(i,1))';
-            mean1 = mean(ini);
+            ini = values_all{k}(1:seqs_concat{k}(i,2)+256, seqs_concat{k}(i,1))';
+            mean1 = nanmean(ini);
             onesbymean = ones(1,513).*mean1;
             onesbymean(:,1:length(ini)) = ini;
             value_per_spikeinseq{k}(i,:) = onesbymean;
             
-        elseif seqs_concat{k}(i,2)+256 >= (fs*60) %edge condition for the end of the values
-            endl = values_all{k}(seqs_concat{k}(i,2)-256:512*60, seqs_concat{k}(i,1))';
-            mean2 = mean(endl);
+        elseif seqs_concat{k}(i,2)+256 > (fs*60) %edge condition for the end of the values
+            endl = values_all{k}(seqs_concat{k}(i,2)-256:end, seqs_concat{k}(i,1))';
+            mean2 = nanmean(endl);
             mean2byones = ones(1,513).*mean2;
-            mean2byones(:,end-length(endl):end)
+            mean2byones(:,end-length(endl)+1:end) = endl;
             value_per_spikeinseq{k}(i,:) = mean2byones;
             
         else
