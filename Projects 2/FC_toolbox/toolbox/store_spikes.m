@@ -9,7 +9,7 @@ login_name = locations.ieeg_login;
 addpath(genpath(locations.script_folder));
 data_folder = [locations.main_folder,'data/'];
 
-whichPts=(1:39);
+whichPts=(18:39);
 
 for i = whichPts
     disp('started:')

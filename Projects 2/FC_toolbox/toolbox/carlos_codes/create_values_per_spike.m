@@ -4,7 +4,7 @@ addpath '/mnt/leif/littlab/users/aguilac/Projects/FC_toolbox/tools/'
 locations = fc_toolbox_locs_agui;
 results_folder = [locations.main_folder,'results/'];
 %allout_file = [results_folder, 'all_out/'];
-allout_file = '/gdrive/public/USERS/erinconr/projects/fc_toolbox/results/all_out/';%add location to access the PC files generated from long_run
+allout_file = '/mnt/leif/littlab/users/erinconr/projects/fc_toolbox/results/all_out/';%add location to access the PC files generated from long_run
 ieeg_folder = locations.ieeg_folder;
 addpath(genpath(ieeg_folder));
 pwfile = locations.ieeg_pw_file;
